@@ -1,7 +1,25 @@
+import { supabase } from '@/lib/supabase';
+import { redirect } from 'next/navigation';
+
 export default function CheckoutPage() {
   async function handleSubmit(formData: FormData) {
     'use server';
-    console.log('Order for:', formData.get('email'));
+    const email = formData.get('email') as string;
+    const total = Number(formData.get('total'));
+
+    const { data, error } = await supabase
+      .from('orders')
+      .insert({ user_email: email, total })
+      .select('id')
+      .single();
+
+    if (error) {
+      console.error('Supabase error:', error);
+      throw new Error('Failed to save order');
+    }
+
+    console.log('Order saved with id:', data.id);
+    redirect('/checkout/success');
   }
 
   return (
